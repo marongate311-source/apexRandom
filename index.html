@@ -41,6 +41,10 @@
   <h2>キャラ</h2>
   <div id="char-result">???</div>
   <button onclick="roll('char')">ルーレット</button>
+  <label>
+  <input type="checkbox" id="fixChar"> キャラ固定
+  </label>
+  <select id="charSelect" disabled></select>
 </div>
 
 <!-- 武器1ルーレット -->
@@ -85,6 +89,34 @@
     const result = list[Math.floor(Math.random()*list.length)];
     document.getElementById(type+"-result").innerText = result;
   }
+
+  // キャラリスト（将来はクラスやオブジェクトにしてもOK）
+const characters = ["レイス", "ジブラルタル", "ブラッドハウンド", "オクタン"];
+
+// セレクトボックスにoptionを自動追加
+const charSelect = document.getElementById("charSelect");
+characters.forEach(c => {
+  const option = document.createElement("option");
+  option.value = c;
+  option.textContent = c;
+  charSelect.appendChild(option);
+});
+
+// 固定化チェックボックス
+const fixCharCheckbox = document.getElementById("fixChar");
+fixCharCheckbox.addEventListener("change", () => {
+  charSelect.disabled = !fixCharCheckbox.checked;
+});
+
+// ルーレットの結果取得
+function getCharacterResult() {
+  if (fixCharCheckbox.checked) {
+    return charSelect.value; // プルダウンの値
+  } else {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    return characters[randomIndex];
+  }
+}
 </script>
 
 </body>

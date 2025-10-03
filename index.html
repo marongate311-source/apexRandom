@@ -253,12 +253,13 @@ window.onload = ()=>{
 
 // 武器絞り込み
 function getFilteredWeapons(type){
-  let list = weapons.slice();
+  // 最初は通常武器のみ
+  let list = weapons.filter(w => !w.isCarePackage);
+
   const hardBox = document.getElementById(type+"Hard");
   if(hardBox && hardBox.checked){
-    weapons.filter(w=>w.isCarePackage).forEach(w=>{
-      if(!list.includes(w)) list.push(w);
-    });
+    // CarePackage武器を追加
+    weapons.filter(w => w.isCarePackage).forEach(w => list.push(w));
   }
   const typeFilters = Array.from(document.querySelectorAll("."+type+"Type:checked")).map(i=>i.value);
   const ammoFilters = Array.from(document.querySelectorAll("."+type+"Ammo:checked")).map(i=>i.value);

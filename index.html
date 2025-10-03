@@ -1,89 +1,136 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Apex縛りルーレット</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; }
-    .overlay {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      color: #fff; display: flex;
-      align-items: center; justify-content: center;
-      flex-direction: column;
-    }
-    .hidden { display: none; }
-    .roulette-box {
-      margin: 20px; padding: 15px;
-      border: 2px solid #333; border-radius: 10px;
-      display: inline-block;
-    }
-    button {
-      margin-top: 10px; padding: 8px 12px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Apex Legends 縛りルーレット</title>
+<style>
+  body { font-family:sans-serif; background:#222; color:#fff; margin:0; text-align:center; }
+  .overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center;
+    z-index: 1000; flex-direction: column;
+  }
+  .overlay p { max-width:400px; margin-bottom:20px; }
+  .close-btn { cursor:pointer; padding:5px 10px; background:#555; border:none; color:#fff; font-size:16px; }
+  .roulette-container { margin-top:50px; }
+  .roulette { margin:20px 0; }
+  input[type="text"] { width:120px; }
+  .result { font-size:24px; font-weight:bold; margin-top:10px; min-height:30px; }
+</style>
 </head>
 <body>
 
 <!-- 注意書きオーバーレイ -->
-<div id="overlay" class="overlay">
-  <h2>注意書き</h2>
-  <p>このサイトはApex Legendsの縛りプレイを楽しむための非公式ツールです。</p>
-  <label><input type="checkbox" id="skipNotice"> 次回から表示しない</label><br>
-  <button onclick="closeOverlay()">× 閉じる</button>
+<div class="overlay" id="overlay">
+  <p>※ルーレットを回す前に必ず注意事項を確認してください。</p>
+  <label><input type="checkbox" id="dontShow"> 今後表示しない</label><br><br>
+  <button class="close-btn" id="closeOverlay">× 閉じる</button>
 </div>
 
-<h1>Apex縛りルーレット</h1>
+<h1>Apex Legends 縛りルーレット</h1>
 
-<!-- キャラルーレット -->
-<div class="roulette-box">
-  <h2>キャラ</h2>
-  <div id="char-result">???</div>
-  <button onclick="roll('char')">ルーレット</button>
-</div>
+<div class="roulette-container">
+  <!-- キャラクター -->
+  <div class="roulette" id="charRoulette">
+    <h3>キャラクター</h3>
+    <input type="checkbox" id="charOn" checked> 有効
+    <input type="text" id="charFixed" placeholder="固定値">
+    <div class="result" id="charResult">-</div>
+    <button onclick="roll('char')">回す</button>
+  </div>
 
-<!-- 武器1ルーレット -->
-<div class="roulette-box">
-  <h2>武器①</h2>
-  <div id="weapon1-result">???</div>
-  <button onclick="roll('weapon1')">ルーレット</button>
-</div>
+  <!-- 武器1 -->
+  <div class="roulette" id="weapon1Roulette">
+    <h3>武器①</h3>
+    <input type="checkbox" id="weapon1On" checked> 有効
+    <input type="checkbox" id="weapon1Hard"> 難易度アップ
+    <input type="text" id="weapon1Fixed" placeholder="固定値">
+    <div class="result" id="weapon1Result">-</div>
+    <button onclick="roll('weapon1')">回す</button>
+  </div>
 
-<!-- 武器2ルーレット -->
-<div class="roulette-box">
-  <h2>武器②</h2>
-  <div id="weapon2-result">???</div>
-  <button onclick="roll('weapon2')">ルーレット</button>
+  <!-- 武器2 -->
+  <div class="roulette" id="weapon2Roulette">
+    <h3>武器②</h3>
+    <input type="checkbox" id="weapon2On" checked> 有効
+    <input type="checkbox" id="weapon2Hard"> 難易度アップ
+    <input type="text" id="weapon2Fixed" placeholder="固定値">
+    <div class="result" id="weapon2Result">-</div>
+    <button onclick="roll('weapon2')">回す</button>
+  </div>
+
+  <!-- 武器3（特定キャラ） -->
+  <div class="roulette" id="weapon3Roulette" style="display:none;">
+    <h3>武器③</h3>
+    <input type="checkbox" id="weapon3On" checked> 有効
+    <input type="checkbox" id="weapon3Hard"> 難易度アップ
+    <input type="text" id="weapon3Fixed" placeholder="固定値">
+    <div class="result" id="weapon3Result">-</div>
+    <button onclick="roll('weapon3')">回す</button>
+  </div>
 </div>
 
 <script>
-  // データ例
-  const characters = ["バンガロール","レイス","ローバ","ブラハ","パスファインダー"];
-  const weapons = ["R-301","フラットライン","マスティフ","ボルトSMG","クレーバー(ケアパケ)"];
+  // サンプルデータ
+  const chars = ["レイス","ジブラルタル","ランパート","バンガロール"];
+  const weaponsNormal = ["R-301","R-99","VK-47","プラウラー"];
+  const weaponsHard = ["ケアパケ武器1","ケアパケ武器2"];
+  const specialChar = "ランパート"; // 武器3つ持てるキャラ
 
   // 注意書きオーバーレイ処理
-  window.onload = () => {
-    if(localStorage.getItem("skipNotice") === "true"){
-      document.getElementById("overlay").classList.add("hidden");
-    }
-  };
+  const overlay = document.getElementById('overlay');
+  const closeBtn = document.getElementById('closeOverlay');
+  const dontShow = document.getElementById('dontShow');
 
-  function closeOverlay(){
-    if(document.getElementById("skipNotice").checked){
-      localStorage.setItem("skipNotice","true");
-    }
-    document.getElementById("overlay").classList.add("hidden");
+  if(localStorage.getItem('hideOverlay') === 'true'){
+    overlay.style.display = 'none';
   }
 
-  // ルーレット処理
-  function roll(type){
-    let list;
-    if(type === "char") list = characters;
-    else list = weapons;
+  closeBtn.onclick = () => {
+    if(dontShow.checked) localStorage.setItem('hideOverlay','true');
+    overlay.style.display = 'none';
+    checkSpecialChar();
+  }
 
-    const result = list[Math.floor(Math.random()*list.length)];
-    document.getElementById(type+"-result").innerText = result;
+  function checkSpecialChar(){
+    const char = document.getElementById('charResult').innerText;
+    if(char === specialChar){
+      document.getElementById('weapon3Roulette').style.display = 'block';
+    } else {
+      document.getElementById('weapon3Roulette').style.display = 'none';
+    }
+  }
+
+  function roll(type){
+    let resultSpan = document.getElementById(type + "Result");
+    let fixed = document.getElementById(type + "Fixed").value.trim();
+    let on = document.getElementById(type + "On").checked;
+    if(!on) return;
+    if(fixed !== "") { resultSpan.innerText = fixed; checkSpecialChar(); return; }
+
+    // 選択肢リスト
+    let list = [];
+    if(type === 'char') list = chars;
+    else {
+      list = [...weaponsNormal];
+      const hardBox = document.getElementById(type + "Hard");
+      if(hardBox && hardBox.checked) list = list.concat(weaponsHard);
+    }
+
+    // アニメーションで回す
+    let i = 0;
+    const animInterval = setInterval(() => {
+      resultSpan.innerText = list[i % list.length];
+      i++;
+    }, 100);
+
+    // 2秒後にランダム停止
+    setTimeout(() => {
+      clearInterval(animInterval);
+      const choice = list[Math.floor(Math.random()*list.length)];
+      resultSpan.innerText = choice;
+      if(type==='char') checkSpecialChar();
+    }, 2000);
   }
 </script>
 

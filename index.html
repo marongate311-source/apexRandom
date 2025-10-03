@@ -5,132 +5,137 @@
 <title>Apex Legends 縛りルーレット</title>
 <style>
   body { font-family:sans-serif; background:#222; color:#fff; margin:0; text-align:center; }
-  .overlay {
-    position: fixed; top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center;
-    z-index: 1000; flex-direction: column;
-  }
-  .overlay p { max-width:400px; margin-bottom:20px; }
-  .close-btn { cursor:pointer; padding:5px 10px; background:#555; border:none; color:#fff; font-size:16px; }
-  .roulette-container { margin-top:50px; }
   .roulette { margin:20px 0; }
-  input[type="text"] { width:120px; }
   .result { font-size:24px; font-weight:bold; margin-top:10px; min-height:30px; }
+  img { max-width:150px; margin-top:10px; display:none; }
 </style>
 </head>
 <body>
 
-<!-- 注意書きオーバーレイ -->
-<div class="overlay" id="overlay">
-  <p>※ルーレットを回す前に必ず注意事項を確認してください。</p>
-  <label><input type="checkbox" id="dontShow"> 今後表示しない</label><br><br>
-  <button class="close-btn" id="closeOverlay">× 閉じる</button>
-</div>
-
 <h1>Apex Legends 縛りルーレット</h1>
 
-<div class="roulette-container">
-  <!-- キャラクター -->
-  <div class="roulette" id="charRoulette">
-    <h3>キャラクター</h3>
-    <input type="checkbox" id="charOn" checked> 有効
-    <input type="text" id="charFixed" placeholder="固定値">
-    <div class="result" id="charResult">-</div>
-    <button onclick="roll('char')">回す</button>
-  </div>
+<!-- キャラクター -->
+<div class="roulette">
+  <h3>キャラクター</h3>
+  <label><input type="checkbox" id="charOn" checked> 有効</label>
+  <label><input type="checkbox" id="charFixedCheck"> 固定化</label>
+  <select id="charFixedSelect" disabled></select>
+  <div class="result" id="charResult">-</div>
+  <img id="charImage" src="" alt="">
+  <button onclick="roll('char')">回す</button>
+</div>
 
-  <!-- 武器1 -->
-  <div class="roulette" id="weapon1Roulette">
-    <h3>武器①</h3>
-    <input type="checkbox" id="weapon1On" checked> 有効
-    <input type="checkbox" id="weapon1Hard"> 難易度アップ
-    <input type="text" id="weapon1Fixed" placeholder="固定値">
-    <div class="result" id="weapon1Result">-</div>
-    <button onclick="roll('weapon1')">回す</button>
-  </div>
+<!-- 武器1 -->
+<div class="roulette">
+  <h3>武器①</h3>
+  <label><input type="checkbox" id="weapon1On" checked> 有効</label>
+  <label><input type="checkbox" id="weapon1FixedCheck"> 固定化</label>
+  <select id="weapon1FixedSelect" disabled></select>
+  <div class="result" id="weapon1Result">-</div>
+  <img id="weapon1Image" src="" alt="">
+  <button onclick="roll('weapon1')">回す</button>
+</div>
 
-  <!-- 武器2 -->
-  <div class="roulette" id="weapon2Roulette">
-    <h3>武器②</h3>
-    <input type="checkbox" id="weapon2On" checked> 有効
-    <input type="checkbox" id="weapon2Hard"> 難易度アップ
-    <input type="text" id="weapon2Fixed" placeholder="固定値">
-    <div class="result" id="weapon2Result">-</div>
-    <button onclick="roll('weapon2')">回す</button>
-  </div>
-
-  <!-- 武器3（特定キャラ） -->
-  <div class="roulette" id="weapon3Roulette" style="display:none;">
-    <h3>武器③</h3>
-    <input type="checkbox" id="weapon3On" checked> 有効
-    <input type="checkbox" id="weapon3Hard"> 難易度アップ
-    <input type="text" id="weapon3Fixed" placeholder="固定値">
-    <div class="result" id="weapon3Result">-</div>
-    <button onclick="roll('weapon3')">回す</button>
-  </div>
+<!-- 武器2 -->
+<div class="roulette">
+  <h3>武器②</h3>
+  <label><input type="checkbox" id="weapon2On" checked> 有効</label>
+  <label><input type="checkbox" id="weapon2FixedCheck"> 固定化</label>
+  <select id="weapon2FixedSelect" disabled></select>
+  <div class="result" id="weapon2Result">-</div>
+  <img id="weapon2Image" src="" alt="">
+  <button onclick="roll('weapon2')">回す</button>
 </div>
 
 <script>
-  // サンプルデータ
-  const chars = ["レイス","ジブラルタル","ランパート","バンガロール"];
-  const weaponsNormal = ["R-301","R-99","VK-47","プラウラー"];
-  const weaponsHard = ["ケアパケ武器1","ケアパケ武器2"];
-  const specialChar = "ランパート"; // 武器3つ持てるキャラ
-
-  // 注意書きオーバーレイ処理
-  const overlay = document.getElementById('overlay');
-  const closeBtn = document.getElementById('closeOverlay');
-  const dontShow = document.getElementById('dontShow');
-
-  if(localStorage.getItem('hideOverlay') === 'true'){
-    overlay.style.display = 'none';
+  // ===== クラス定義 =====
+  class Character {
+    constructor(name, gender, role, image) {
+      this.name = name;
+      this.gender = gender;
+      this.role = role;
+      this.image = image;
+    }
   }
-
-  closeBtn.onclick = () => {
-    if(dontShow.checked) localStorage.setItem('hideOverlay','true');
-    overlay.style.display = 'none';
-    checkSpecialChar();
-  }
-
-  function checkSpecialChar(){
-    const char = document.getElementById('charResult').innerText;
-    if(char === specialChar){
-      document.getElementById('weapon3Roulette').style.display = 'block';
-    } else {
-      document.getElementById('weapon3Roulette').style.display = 'none';
+  class Weapon {
+    constructor(name, type, ammo, isCarePackage, image) {
+      this.name = name;
+      this.type = type;
+      this.ammo = ammo;
+      this.isCarePackage = isCarePackage;
+      this.image = image;
     }
   }
 
-  function roll(type){
-    let resultSpan = document.getElementById(type + "Result");
-    let fixed = document.getElementById(type + "Fixed").value.trim();
-    let on = document.getElementById(type + "On").checked;
-    if(!on) return;
-    if(fixed !== "") { resultSpan.innerText = fixed; checkSpecialChar(); return; }
+  // ===== データ定義 =====
+  const characters = [
+    new Character("レイス","女","アタッカー","images/wraith.png"),
+    new Character("ジブラルタル","男","タンク","images/gibraltar.png"),
+    new Character("ランパート","女","防衛","images/rampart.png"),
+    new Character("バンガロール","女","アタッカー","images/bangalore.png"),
+  ];
 
-    // 選択肢リスト
-    let list = [];
-    if(type === 'char') list = chars;
-    else {
-      list = [...weaponsNormal];
-      const hardBox = document.getElementById(type + "Hard");
-      if(hardBox && hardBox.checked) list = list.concat(weaponsHard);
+  const weapons = [
+    new Weapon("R-301","AR","ライト",false,"images/r301.png"),
+    new Weapon("R-99","SMG","ライト",false,"images/r99.png"),
+    new Weapon("VK-47","AR","ヘビー",false,"images/vk47.png"),
+    new Weapon("プラウラー","SMG","ヘビー",false,"images/plrowler.png"),
+    new Weapon("クレーバー","SR","特殊",true,"images/kraber.png"),
+  ];
+
+  // ===== プルダウン初期化 =====
+  function initSelect(selectId, dataList) {
+    const select = document.getElementById(selectId);
+    dataList.forEach(d => {
+      const option = document.createElement("option");
+      option.value = d.name;
+      option.textContent = d.name;
+      select.appendChild(option);
+    });
+  }
+
+  // ページロード時
+  window.onload = () => {
+    initSelect("charFixedSelect", characters);
+    initSelect("weapon1FixedSelect", weapons);
+    initSelect("weapon2FixedSelect", weapons);
+
+    // チェックONで有効化
+    ["char","weapon1","weapon2"].forEach(type => {
+      document.getElementById(type + "FixedCheck").addEventListener("change", (e) => {
+        document.getElementById(type + "FixedSelect").disabled = !e.target.checked;
+      });
+    });
+  };
+
+  // ===== ルーレット処理 =====
+  function roll(type) {
+    const on = document.getElementById(type + "On").checked;
+    if (!on) return;
+
+    const fixedCheck = document.getElementById(type + "FixedCheck").checked;
+    const fixedSelect = document.getElementById(type + "FixedSelect");
+    let choice;
+
+    if (type === "char") {
+      if (fixedCheck) {
+        choice = characters.find(c => c.name === fixedSelect.value);
+      } else {
+        choice = characters[Math.floor(Math.random() * characters.length)];
+      }
+    } else { // weapon1, weapon2
+      if (fixedCheck) {
+        choice = weapons.find(w => w.name === fixedSelect.value);
+      } else {
+        choice = weapons[Math.floor(Math.random() * weapons.length)];
+      }
     }
 
-    // アニメーションで回す
-    let i = 0;
-    const animInterval = setInterval(() => {
-      resultSpan.innerText = list[i % list.length];
-      i++;
-    }, 100);
-
-    // 2秒後にランダム停止
-    setTimeout(() => {
-      clearInterval(animInterval);
-      const choice = list[Math.floor(Math.random()*list.length)];
-      resultSpan.innerText = choice;
-      if(type==='char') checkSpecialChar();
-    }, 2000);
+    // 結果表示
+    document.getElementById(type + "Result").innerText = choice.name;
+    const imgEl = document.getElementById(type + "Image");
+    imgEl.src = choice.image;
+    imgEl.style.display = "block";
   }
 </script>
 

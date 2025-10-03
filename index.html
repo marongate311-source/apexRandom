@@ -85,25 +85,6 @@
     const result = list[Math.floor(Math.random()*list.length)];
     document.getElementById(type+"-result").innerText = result;
   }
-
-  // キャラリスト（将来はクラスやオブジェクトにしてもOK）
-const characters = ["レイス", "ジブラルタル", "ブラッドハウンド", "オクタン"];
-
-// セレクトボックスにoptionを自動追加
-const charSelect = document.getElementById("charSelect");
-characters.forEach(c => {
-  const option = document.createElement("option");
-  option.value = c;
-  option.textContent = c;
-  charSelect.appendChild(option);
-});
-
-// 固定化チェックボックス
-const fixCharCheckbox = document.getElementById("fixChar");
-fixCharCheckbox.addEventListener("change", () => {
-  charSelect.disabled = !fixCharCheckbox.checked;
-});
-
 </script>
 
 </body>

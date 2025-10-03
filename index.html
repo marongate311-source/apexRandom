@@ -5,12 +5,19 @@
 <title>Apex Legends 縛りルーレット</title>
 <style>
   body { font-family:sans-serif; background:#222; color:#fff; margin:0; text-align:center; }
-  .roulette { margin:20px 0; border-top:1px solid #555; padding-top:10px; }
+  h1 { margin-top:20px; }
+  .roulette { margin:20px 0; padding:10px; border-top:1px solid #555; }
   .result { font-size:24px; font-weight:bold; margin-top:10px; min-height:30px; }
-  img { max-width:150px; margin-top:10px; display:none; }
+  .result.active { color: yellow; }
+  img { max-width:80%; height:auto; margin-top:10px; display:none; }
   select:disabled { opacity:0.5; }
-  .filters { margin-top:10px; }
-  .filters label { margin-right:10px; }
+  .filters { display:flex; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+  .filters label { margin:5px; }
+  button { font-size:18px; padding:10px 20px; cursor:pointer; margin-top:10px; }
+  @media screen and (max-width: 600px) {
+    .result { font-size:18px; }
+    button, .close-btn { font-size:16px; padding:8px 15px; }
+  }
 </style>
 </head>
 <body>
@@ -34,7 +41,7 @@
   <label><input type="checkbox" id="weapon1FixedCheck"> 固定化</label>
   <select id="weapon1FixedSelect" disabled></select>
   <div class="filters">
-    <label><input type="checkbox" id="weapon1Hard"> 難易度アップ(ケアパケ追加)</label>
+    <label><input type="checkbox" id="weapon1Hard"> 難易度アップ</label>
     <span>武器種:</span>
     <label><input type="checkbox" value="AR" class="weapon1Type">AR</label>
     <label><input type="checkbox" value="SMG" class="weapon1Type">SMG</label>
@@ -43,9 +50,12 @@
     <label><input type="checkbox" value="SG" class="weapon1Type">SG</label>
     <label><input type="checkbox" value="SR" class="weapon1Type">SR</label>
     <label><input type="checkbox" value="MR" class="weapon1Type">MR</label>
+    <br>
     <span>弾種:</span>
     <label><input type="checkbox" value="ライト" class="weapon1Ammo">ライト</label>
     <label><input type="checkbox" value="ヘビー" class="weapon1Ammo">ヘビー</label>
+    <label><input type="checkbox" value="エネルギー" class="weapon1Ammo">エネルギー</label>
+    <label><input type="checkbox" value="スナイパー" class="weapon1Ammo">スナイパー</label>
     <label><input type="checkbox" value="特殊" class="weapon1Ammo">特殊</label>
   </div>
   <div class="result" id="weapon1Result">-</div>
@@ -59,7 +69,7 @@
   <label><input type="checkbox" id="weapon2FixedCheck"> 固定化</label>
   <select id="weapon2FixedSelect" disabled></select>
   <div class="filters">
-    <label><input type="checkbox" id="weapon2Hard"> 難易度アップ(ケアパケ追加)</label>
+    <label><input type="checkbox" id="weapon2Hard"> 難易度アップ</label>
     <span>武器種:</span>
     <label><input type="checkbox" value="AR" class="weapon2Type">AR</label>
     <label><input type="checkbox" value="SMG" class="weapon2Type">SMG</label>
@@ -71,6 +81,8 @@
     <span>弾種:</span>
     <label><input type="checkbox" value="ライト" class="weapon2Ammo">ライト</label>
     <label><input type="checkbox" value="ヘビー" class="weapon2Ammo">ヘビー</label>
+    <label><input type="checkbox" value="エネルギー" class="weapon2Ammo">エネルギー</label>
+    <label><input type="checkbox" value="スナイパー" class="weapon2Ammo">スナイパー</label>
     <label><input type="checkbox" value="特殊" class="weapon2Ammo">特殊</label>
   </div>
   <div class="result" id="weapon2Result">-</div>
@@ -84,7 +96,7 @@
   <label><input type="checkbox" id="weapon3FixedCheck"> 固定化</label>
   <select id="weapon3FixedSelect" disabled></select>
   <div class="filters">
-    <label><input type="checkbox" id="weapon3Hard"> 難易度アップ(ケアパケ追加)</label>
+    <label><input type="checkbox" id="weapon3Hard"> 難易度アップ</label>
     <span>武器種:</span>
     <label><input type="checkbox" value="AR" class="weapon3Type">AR</label>
     <label><input type="checkbox" value="SMG" class="weapon3Type">SMG</label>
@@ -96,16 +108,17 @@
     <span>弾種:</span>
     <label><input type="checkbox" value="ライト" class="weapon3Ammo">ライト</label>
     <label><input type="checkbox" value="ヘビー" class="weapon3Ammo">ヘビー</label>
+    <label><input type="checkbox" value="エネルギー" class="weapon3Ammo">エネルギー</label>
+    <label><input type="checkbox" value="スナイパー" class="weapon3Ammo">スナイパー</label>
     <label><input type="checkbox" value="特殊" class="weapon3Ammo">特殊</label>
   </div>
   <div class="result" id="weapon3Result">-</div>
   <img id="weapon3Image" src="" alt="">
 </div>
 
-<button onclick="rollAll()">Let’s GO!!</button>
+<button onclick="rollAll()">全て回す</button>
 
 <script>
-  // ===== クラス定義 =====
   class Character {
     constructor(name, gender, role, image){
       this.name = name; this.gender = gender; this.role = role; this.image = image;
@@ -192,7 +205,6 @@
     new Weapon("クレーバー","特殊SR","特殊",true,"images/kraber.png"),
   ];
 
-  // ===== 初期化 =====
   function initSelect(selectId, dataList){
     const select = document.getElementById(selectId);
     dataList.forEach(d=>{
@@ -211,71 +223,43 @@
     });
   };
 
-  // ===== フィルター取得 =====
   function getFilteredWeapons(type){
-    let list = weapons.slice(); // コピー
+    let list = weapons.slice();
     const hardBox = document.getElementById(type+"Hard");
     if(hardBox && hardBox.checked){
-      // ケアパケ武器を重複なく追加
       weapons.filter(w=>w.isCarePackage).forEach(w=>{
         if(!list.includes(w)) list.push(w);
       });
     }
-
-    // 武器種・弾種フィルター
     const typeFilters = Array.from(document.querySelectorAll("."+type+"Type:checked")).map(i=>i.value);
     const ammoFilters = Array.from(document.querySelectorAll("."+type+"Ammo:checked")).map(i=>i.value);
 
     if(typeFilters.length>0) list = list.filter(w=>typeFilters.includes(w.type));
     if(ammoFilters.length>0) list = list.filter(w=>ammoFilters.includes(w.ammo));
 
-    if(list.length === 0){
+    if(list.length===0){
       alert(type+"の条件に合致する武器が存在しません。設定を見直してください。");
       return null;
     }
     return list;
   }
 
-  // ===== 全ルーレット回す =====
   function rollAll(){
     ["char","weapon1","weapon2","weapon3"].forEach(type=>roll(type));
   }
 
-  // ===== 個別ルーレット =====
   function roll(type){
     if(!document.getElementById(type+"On").checked) return;
-
     const fixedCheck = document.getElementById(type+"FixedCheck").checked;
     const fixedSelect = document.getElementById(type+"FixedSelect");
     const resultSpan = document.getElementById(type+"Result");
     const imgEl = document.getElementById(type+"Image");
 
     let list = (type==="char") ? characters : getFilteredWeapons(type);
-    if(list===null) return; // 候補なしなら中止
+    if(list===null) return;
 
-    // アニメーション
+    // 文字色黄色用クラス
+    resultSpan.classList.add("active");
+
     let i=0;
-    const anim = setInterval(()=>{
-      const choice = list[i%list.length];
-      resultSpan.innerText = choice.name;
-      imgEl.src = choice.image;
-      imgEl.style.display="block";
-      i++;
-    },100);
-
-    setTimeout(()=>{
-      clearInterval(anim);
-      let finalChoice = fixedCheck ? list.find(w=>w.name===fixedSelect.value)
-                                   : list[Math.floor(Math.random()*list.length)];
-      resultSpan.innerText = finalChoice.name;
-      imgEl.src = finalChoice.image;
-
-      if(type==="char"){
-        document.getElementById("weapon3Roulette").style.display = (finalChoice.name===specialChar)?"block":"none";
-      }
-    },2000);
-  }
-
-</script>
-</body>
-</html>
+    const anim = setInterval

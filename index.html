@@ -12,8 +12,14 @@
   img { max-width:80%; height:auto; margin-top:10px; display:none; }
   select:disabled { opacity:0.5; }
   .filters { display:flex; flex-wrap:wrap; justify-content:center; margin-top:10px; }
-  .filters label { margin:5px; }
+  .filters label, .filters span { margin:5px; }
   button { font-size:18px; padding:10px 20px; cursor:pointer; margin-top:10px; }
+  .overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center;
+    z-index: 1000; flex-direction: column; color:#fff; text-align:center;
+  }
+  .close-btn { cursor:pointer; padding:10px 20px; background:#555; border:none; color:#fff; font-size:18px; margin-top:20px; }
   @media screen and (max-width: 600px) {
     .result { font-size:18px; }
     button, .close-btn { font-size:16px; padding:8px 15px; }
@@ -21,6 +27,13 @@
 </style>
 </head>
 <body>
+
+<!-- 注意書きオーバーレイ -->
+<div class="overlay" id="overlay">
+  <p>※ルーレットを回す前に必ず注意事項を確認してください。</p>
+  <label><input type="checkbox" id="dontShow"> 今後表示しない</label><br>
+  <button class="close-btn" id="closeOverlay">× 閉じる</button>
+</div>
 
 <h1>Apex Legends 縛りルーレット</h1>
 
@@ -50,7 +63,6 @@
     <label><input type="checkbox" value="SG" class="weapon1Type">SG</label>
     <label><input type="checkbox" value="SR" class="weapon1Type">SR</label>
     <label><input type="checkbox" value="MR" class="weapon1Type">MR</label>
-    <br>
     <span>弾種:</span>
     <label><input type="checkbox" value="ライト" class="weapon1Ammo">ライト</label>
     <label><input type="checkbox" value="ヘビー" class="weapon1Ammo">ヘビー</label>
@@ -119,16 +131,16 @@
 <button onclick="rollAll()">全て回す</button>
 
 <script>
-  class Character {
-    constructor(name, gender, role, image){
-      this.name = name; this.gender = gender; this.role = role; this.image = image;
-    }
+class Character {
+  constructor(name, gender, role, image){
+    this.name = name; this.gender = gender; this.role = role; this.image = image;
   }
-  class Weapon {
-    constructor(name, type, ammo, isCarePackage, image){
-      this.name=name; this.type=type; this.ammo=ammo; this.isCarePackage=isCarePackage; this.image=image;
-    }
+}
+class Weapon {
+  constructor(name, type, ammo, isCarePackage, image){
+    this.name=name; this.type=type; this.ammo=ammo; this.isCarePackage=isCarePackage; this.image=image;
   }
+}
 
   // ===== データ =====
   const specialChar = "バリスティック";
@@ -205,61 +217,106 @@
     new Weapon("クレーバー","特殊SR","特殊",true,"images/kraber.png"),
   ];
 
-  function initSelect(selectId, dataList){
-    const select = document.getElementById(selectId);
-    dataList.forEach(d=>{
-      const option = document.createElement("option");
-      option.value = d.name; option.textContent = d.name;
-      select.appendChild(option);
+
+// プルダウン初期化
+function initSelect(selectId, dataList){
+  const select = document.getElementById(selectId);
+  dataList.forEach(d=>{
+    const option = document.createElement("option");
+    option.value = d.name; option.textContent = d.name;
+    select.appendChild(option);
+  });
+}
+
+window.onload = ()=>{
+  // 注意書きオーバーレイ処理
+  const overlay = document.getElementById('overlay');
+  const closeBtn = document.getElementById('closeOverlay');
+  const dontShow = document.getElementById('dontShow');
+
+  if(localStorage.getItem('hideOverlay') === 'true'){
+    overlay.style.display = 'none';
+  }
+
+  closeBtn.onclick = () => {
+    if(dontShow.checked) localStorage.setItem('hideOverlay','true');
+    overlay.style.display = 'none';
+  }
+
+  ["char","weapon1","weapon2","weapon3"].forEach(type=>{
+    initSelect(type+"FixedSelect",(type==="char")?characters:weapons);
+    document.getElementById(type+"FixedCheck").addEventListener("change",(e)=>{
+      document.getElementById(type+"FixedSelect").disabled = !e.target.checked;
+    });
+  });
+};
+
+// 武器絞り込み
+function getFilteredWeapons(type){
+  let list = weapons.slice();
+  const hardBox = document.getElementById(type+"Hard");
+  if(hardBox && hardBox.checked){
+    weapons.filter(w=>w.isCarePackage).forEach(w=>{
+      if(!list.includes(w)) list.push(w);
     });
   }
+  const typeFilters = Array.from(document.querySelectorAll("."+type+"Type:checked")).map(i=>i.value);
+  const ammoFilters = Array.from(document.querySelectorAll("."+type+"Ammo:checked")).map(i=>i.value);
 
-  window.onload = ()=>{
-    ["char","weapon1","weapon2","weapon3"].forEach(type=>{
-      initSelect(type+"FixedSelect",(type==="char")?characters:weapons);
-      document.getElementById(type+"FixedCheck").addEventListener("change",(e)=>{
-        document.getElementById(type+"FixedSelect").disabled = !e.target.checked;
-      });
-    });
-  };
+  if(typeFilters.length>0) list = list.filter(w=>typeFilters.includes(w.type));
+  if(ammoFilters.length>0) list = list.filter(w=>ammoFilters.includes(w.ammo));
 
-  function getFilteredWeapons(type){
-    let list = weapons.slice();
-    const hardBox = document.getElementById(type+"Hard");
-    if(hardBox && hardBox.checked){
-      weapons.filter(w=>w.isCarePackage).forEach(w=>{
-        if(!list.includes(w)) list.push(w);
-      });
-    }
-    const typeFilters = Array.from(document.querySelectorAll("."+type+"Type:checked")).map(i=>i.value);
-    const ammoFilters = Array.from(document.querySelectorAll("."+type+"Ammo:checked")).map(i=>i.value);
-
-    if(typeFilters.length>0) list = list.filter(w=>typeFilters.includes(w.type));
-    if(ammoFilters.length>0) list = list.filter(w=>ammoFilters.includes(w.ammo));
-
-    if(list.length===0){
-      alert(type+"の条件に合致する武器が存在しません。設定を見直してください。");
-      return null;
-    }
-    return list;
+  if(list.length===0){
+    alert(type+"の条件に合致する武器が存在しません。設定を見直してください。");
+    return null;
   }
+  return list;
+}
 
-  function rollAll(){
-    ["char","weapon1","weapon2","weapon3"].forEach(type=>roll(type));
-  }
+// 全ルーレットを回す
+function rollAll(){
+  ["char","weapon1","weapon2","weapon3"].forEach(type=>roll(type));
+}
 
-  function roll(type){
-    if(!document.getElementById(type+"On").checked) return;
-    const fixedCheck = document.getElementById(type+"FixedCheck").checked;
-    const fixedSelect = document.getElementById(type+"FixedSelect");
-    const resultSpan = document.getElementById(type+"Result");
-    const imgEl = document.getElementById(type+"Image");
+// 単体ルーレット
+function roll(type){
+  if(!document.getElementById(type+"On").checked) return;
+  const fixedCheck = document.getElementById(type+"FixedCheck").checked;
+  const fixedSelect = document.getElementById(type+"FixedSelect");
+  const resultSpan = document.getElementById(type+"Result");
+  const imgEl = document.getElementById(type+"Image");
 
-    let list = (type==="char") ? characters : getFilteredWeapons(type);
-    if(list===null) return;
+  let list = (type==="char") ? characters : getFilteredWeapons(type);
+  if(list===null) return;
 
-    // 文字色黄色用クラス
-    resultSpan.classList.add("active");
+  resultSpan.classList.add("active");
+  imgEl.style.display="inline";
 
-    let i=0;
-    const anim = setInterval
+  let i=0;
+  const anim = setInterval(() => {
+    const display = list[i % list.length];
+    resultSpan.innerText = display.name;
+    imgEl.src = display.image;
+    i++;
+  }, 100);
+
+  setTimeout(() => {
+    clearInterval(anim);
+    let finalChoice;
+    if(fixedCheck){
+      finalChoice = list.find(w => w.name === fixedSelect.value);
+    } else {
+      finalChoice = list[Math.floor(Math.random()*list.length)];
+    }
+    resultSpan.innerText = finalChoice.name;
+    imgEl.src = finalChoice.image;
+
+    if(type==="char"){
+      document.getElementById("weapon3Roulette").style.display = (finalChoice.name===specialChar) ? "block" : "none";
+    }
+
+  }, 2000);
+}
+</script>
+</body>
+</html>

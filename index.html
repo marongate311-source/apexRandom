@@ -118,77 +118,18 @@
   }
 
   // ===== データ =====
-  const specialChar = "バリスティック";
+  const specialChar = "ランパート";
   const characters = [
-    new Character("バリスティック","男","アサルト","images/wraith.png"),
-    new Character("マッドマギー","女","アサルト","images/gibraltar.png"),
-    new Character("フューズ","男","アサルト","images/rampart.png"),
-    new Character("レヴナント","男","アサルト","images/bangalore.png"),
-    new Character("バンガロール","女","アサルト","images/bangalore.png"),
-
-    new Character("レイス","女","スカーミッシャー","images/wraith.png"),
-    new Character("オクタン","男","スカーミッシャー","images/gibraltar.png"),
-    new Character("パスファインダー","男","スカーミッシャー","images/rampart.png"),
-    new Character("ホライゾン","女","スカーミッシャー","images/bangalore.png"),
-    new Character("アッシュ","女","スカーミッシャー","images/bangalore.png"),
-    new Character("オルター","女","スカーミッシャー","images/bangalore.png"),
-
-    new Character("ブラッドハウンド","女","リコン","images/gibraltar.png"),
-    new Character("クリプト","男","リコン","images/rampart.png"),
-    new Character("ヴァルキリー","女","リコン","images/bangalore.png"),
-    new Character("ヴァンテージ","女","リコン","images/bangalore.png"),
-    new Character("シア","男","リコン","images/bangalore.png"),
-    new Character("スパロー","男","リコン","images/bangalore.png"),
-
-    new Character("コンジット","女","サポート","images/gibraltar.png"),
-    new Character("ジブラルタル","男","サポート","images/rampart.png"),
-    new Character("ライフライン","女","サポート","images/bangalore.png"),
-    new Character("ローバ","女","サポート","images/bangalore.png"),
-    new Character("ミラージュ","男","サポート","images/bangalore.png"),
-    new Character("ニューキャッスル","男","サポート","images/bangalore.png"),
-
-    new Character("カタリスト","女","コントロール","images/gibraltar.png"),
-    new Character("コースティック","男","コントロール","images/rampart.png"),
-    new Character("ランパート","女","コントロール","images/bangalore.png"),
-    new Character("ワットソン","女","コントロール","images/bangalore.png"),
+    new Character("レイス","女","アタッカー","images/wraith.png"),
+    new Character("ジブラルタル","男","タンク","images/gibraltar.png"),
+    new Character("ランパート","女","防衛","images/rampart.png"),
+    new Character("バンガロール","女","アタッカー","images/bangalore.png"),
   ];
-  
   const weapons = [
     new Weapon("R-301","AR","ライト",false,"images/r301.png"),
     new Weapon("R-99","SMG","ライト",false,"images/r99.png"),
-    new Weapon("スピットファイア","LMG","ライト",false,"images/r99.png"),
-    new Weapon("G7スカウト","MR","ライト",false,"images/r99.png"),
-    new Weapon("CAR","SMG","ライト",false,"images/r99.png"),
-    new Weapon("オルタネータ","SMG","ライト",false,"images/r99.png"),
-
-    new Weapon("フラットライン","AR","ヘビー",false,"images/vk47.png"),
-    new Weapon("CAR","SMG","ヘビー",false,"images/vk47.png"),
-    new Weapon("プラウラー","SMG","ヘビー",false,"images/vk47.png"),
-    new Weapon("ランページ","LMG","ヘビー",false,"images/vk47.png"),
-    new Weapon("30-30リピーター","MR","ヘビー",false,"images/vk47.png"),
-    new Weapon("ヘムロック","AR","ヘビー",false,"images/vk47.png"),
-
-    new Weapon("ボルト","SMG","エネルギー",false,"images/vk47.png"),
-    new Weapon("RE45","SMG","エネルギー",false,"images/vk47.png"),
-    new Weapon("ハボック","AR","エネルギー",false,"images/vk47.png"),
-    new Weapon("Lスター","LMG","エネルギー",false,"images/vk47.png"),
-    new Weapon("ディボーション","LMG","エネルギー",false,"images/vk47.png"),
-
-    new Weapon("モザンビーク(ソロ)","SG","ショットガン",false,"images/vk47.png"),
-    new Weapon("モザンビーク(アキンボ)","SG","ショットガン",false,"images/vk47.png"),
-    new Weapon("EVA-8","SG","ショットガン",false,"images/vk47.png"),
-    new Weapon("ピースキーパー","SG","ショットガン",false,"images/vk47.png"),
-    new Weapon("マスティフ","SG","ショットガン",false,"images/vk47.png"),
-
-    new Weapon("ウィングマン","HG","スナイパー",false,"images/vk47.png"),
-    new Weapon("ロングボウ","SR","スナイパー",false,"images/vk47.png"),
-    new Weapon("チャージライフル","SR","スナイパー",false,"images/vk47.png"),
-    new Weapon("センチネル","SR","スナイパー",false,"images/vk47.png"),
-
-    new Weapon("ボセック","MR","特殊",false,"images/vk47.png"),
-    
-    new Weapon("トリプルテイク","MR","特殊",true,"images/vk47.png"),
-    new Weapon("P2020","HG","特殊",true,"images/vk47.png"),
+    new Weapon("VK-47","AR","ヘビー",false,"images/vk47.png"),
+    new Weapon("プラウラー","SMG","ヘビー",false,"images/plrowler.png"),
     new Weapon("クレーバー","SR","特殊",true,"images/kraber.png"),
   ];
 
@@ -213,16 +154,27 @@
 
   // ===== フィルター取得 =====
   function getFilteredWeapons(type){
-    let list = weapons.slice();
-    if(document.getElementById(type+"Hard").checked){
-      list = list.concat(weapons.filter(w=>w.isCarePackage));
+    let list = weapons.slice(); // コピー
+    const hardBox = document.getElementById(type+"Hard");
+    if(hardBox && hardBox.checked){
+      // ケアパケ武器を重複なく追加
+      weapons.filter(w=>w.isCarePackage).forEach(w=>{
+        if(!list.includes(w)) list.push(w);
+      });
     }
-    // 武器種フィルター
+
+    // 武器種・弾種フィルター
     const typeFilters = Array.from(document.querySelectorAll("."+type+"Type:checked")).map(i=>i.value);
     const ammoFilters = Array.from(document.querySelectorAll("."+type+"Ammo:checked")).map(i=>i.value);
+
     if(typeFilters.length>0) list = list.filter(w=>typeFilters.includes(w.type));
     if(ammoFilters.length>0) list = list.filter(w=>ammoFilters.includes(w.ammo));
-    return list.length>0 ? list : weapons; // 0件は元に戻す
+
+    if(list.length === 0){
+      alert(type+"の条件に合致する武器が存在しません。設定を見直してください。");
+      return null;
+    }
+    return list;
   }
 
   // ===== 全ルーレット回す =====
@@ -233,13 +185,16 @@
   // ===== 個別ルーレット =====
   function roll(type){
     if(!document.getElementById(type+"On").checked) return;
+
     const fixedCheck = document.getElementById(type+"FixedCheck").checked;
     const fixedSelect = document.getElementById(type+"FixedSelect");
     const resultSpan = document.getElementById(type+"Result");
     const imgEl = document.getElementById(type+"Image");
 
-    let list = (type==="char")? characters : getFilteredWeapons(type);
+    let list = (type==="char") ? characters : getFilteredWeapons(type);
+    if(list===null) return; // 候補なしなら中止
 
+    // アニメーション
     let i=0;
     const anim = setInterval(()=>{
       const choice = list[i%list.length];

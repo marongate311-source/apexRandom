@@ -279,7 +279,6 @@ function rollAll(){
   ["char","weapon1","weapon2","weapon3"].forEach(type=>roll(type));
 }
 
-// 単体ルーレット
 function roll(type){
   if(!document.getElementById(type+"On").checked) return;
   const fixedCheck = document.getElementById(type+"FixedCheck").checked;
@@ -293,6 +292,11 @@ function roll(type){
   resultSpan.classList.add("active");
   imgEl.style.display="inline";
 
+  // === ドラムロール音を再生 ===
+  const drum = document.getElementById("drumSound");
+  drum.currentTime = 0;
+  drum.play();
+
   let i=0;
   const anim = setInterval(() => {
     const display = list[i % list.length];
@@ -303,21 +307,33 @@ function roll(type){
 
   setTimeout(() => {
     clearInterval(anim);
+
     let finalChoice;
     if(fixedCheck){
       finalChoice = list.find(w => w.name === fixedSelect.value);
     } else {
       finalChoice = list[Math.floor(Math.random()*list.length)];
     }
+
     resultSpan.innerText = finalChoice.name;
     imgEl.src = finalChoice.image;
 
+    // === 結果音を再生 ===
+    const result = document.getElementById("resultSound");
+    result.currentTime = 0;
+    result.play();
+
     if(type==="char"){
-      document.getElementById("weapon3Roulette").style.display = (finalChoice.name===specialChar) ? "block" : "none";
+      document.getElementById("weapon3Roulette").style.display = 
+        (finalChoice.name===specialChar) ? "block" : "none";
     }
 
   }, 2000);
 }
 </script>
+
+  <audio id="drumSound" src="sounds/drum.mp3"></audio>
+  <audio id="resultSound" src="sounds/oh.mp3"></audio>
+
 </body>
 </html>

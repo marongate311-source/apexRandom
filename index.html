@@ -142,6 +142,7 @@ class Weapon {
   }
 }
 
+  
   // ===== データ =====
   const specialChar = "バリスティック";
   const characters = [
@@ -218,6 +219,26 @@ class Weapon {
   ];
 
 
+  // 音声要素を取得
+const drumroll = document.getElementById("drumroll");
+const resultSound = document.getElementById("resultSound");
+
+function playDrumroll(){
+  drumroll.currentTime = 0;
+  drumroll.loop = true;
+  drumroll.play();
+}
+
+function stopDrumroll(){
+  drumroll.pause();
+  drumroll.currentTime = 0;
+}
+
+function playResultSound(){
+  resultSound.currentTime = 0;
+  resultSound.play();
+}
+
 // プルダウン初期化
 function initSelect(selectId, dataList){
   const select = document.getElementById(selectId);
@@ -293,9 +314,7 @@ function roll(type){
   imgEl.style.display="inline";
 
   // === ドラムロール音を再生 ===
-  const drum = document.getElementById("drumSound");
-  drum.currentTime = 0;
-  drum.play();
+  playDrumroll();
 
   let i=0;
   const anim = setInterval(() => {
@@ -318,10 +337,8 @@ function roll(type){
     resultSpan.innerText = finalChoice.name;
     imgEl.src = finalChoice.image;
 
-    // === 結果音を再生 ===
-    const result = document.getElementById("resultSound");
-    result.currentTime = 0;
-    result.play();
+    stopDrumroll();   // ← ドラムロール停止
+    playResultSound(); // ← 決定音
 
     if(type==="char"){
       document.getElementById("weapon3Roulette").style.display = 

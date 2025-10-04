@@ -218,27 +218,6 @@ class Weapon {
     new Weapon("クレーバー","特殊SR","特殊",true,"images/kraber.png"),
   ];
 
-
-  // 音声要素を取得
-const drumroll = document.getElementById("drumroll");
-const resultSound = document.getElementById("resultSound");
-
-function playDrumroll(){
-  drumroll.currentTime = 0;
-  drumroll.loop = true;
-  drumroll.play();
-}
-
-function stopDrumroll(){
-  drumroll.pause();
-  drumroll.currentTime = 0;
-}
-
-function playResultSound(){
-  resultSound.currentTime = 0;
-  resultSound.play();
-}
-
 // プルダウン初期化
 function initSelect(selectId, dataList){
   const select = document.getElementById(selectId);
@@ -295,26 +274,40 @@ function getFilteredWeapons(type){
   return list;
 }
 
+let runningCount = 0; // 動作中ルーレットの数
+
 // 全ルーレットを回す
 function rollAll(){
-  ["char","weapon1","weapon2","weapon3"].forEach(type=>roll(type));
+  runningCount = 0;
+
+  // ドラムロール音を再生
+  const drum = document.getElementById("drumSound");
+  drum.currentTime = 0;
+  drum.play();
+
+  ["char","weapon1","weapon2","weapon3"].forEach(type=>{
+    if(document.getElementById(type+"On").checked){
+      runningCount++;  // 有効なルーレットだけカウント
+      roll(type);
+    }
+  });
 }
 
+// 単体ルーレット
 function roll(type){
-  if(!document.getElementById(type+"On").checked) return;
   const fixedCheck = document.getElementById(type+"FixedCheck").checked;
   const fixedSelect = document.getElementById(type+"FixedSelect");
   const resultSpan = document.getElementById(type+"Result");
   const imgEl = document.getElementById(type+"Image");
 
   let list = (type==="char") ? characters : getFilteredWeapons(type);
-  if(list===null) return;
+  if(list===null){
+    runningCount--; // エラー時も減らしておく
+    return;
+  }
 
   resultSpan.classList.add("active");
   imgEl.style.display="inline";
-
-  // === ドラムロール音を再生 ===
-  playDrumroll();
 
   let i=0;
   const anim = setInterval(() => {
@@ -337,12 +330,21 @@ function roll(type){
     resultSpan.innerText = finalChoice.name;
     imgEl.src = finalChoice.image;
 
-    stopDrumroll();   // ← ドラムロール停止
-    playResultSound(); // ← 決定音
-
     if(type==="char"){
       document.getElementById("weapon3Roulette").style.display = 
         (finalChoice.name===specialChar) ? "block" : "none";
+    }
+
+    // ==== 最後に止まったら音を鳴らす ====
+    runningCount--;
+    if(runningCount === 0){
+      const drum = document.getElementById("drumSound");
+      drum.pause();
+      drum.currentTime = 0;
+
+      const result = document.getElementById("resultSound");
+      result.currentTime = 0;
+      result.play();
     }
 
   }, 2000);
